@@ -14,15 +14,15 @@ from pathlib import Path
 
 import pandas as pd
 
-from wine_origin import evaluate as evaluate_mod
-from wine_origin import models as models_mod
-from wine_origin.config import load_config
-from wine_origin.data import (
+from ai_music_origin import evaluate as evaluate_mod
+from ai_music_origin import models as models_mod
+from ai_music_origin.config import load_config
+from ai_music_origin.data import (
     load_raw_csv,
     split_features_target,
     train_test_split_stratified,
 )
-from wine_origin.utils import env_info, set_seed, setup_logging
+from ai_music_origin.utils import env_info, set_seed, setup_logging
 
 logger = logging.getLogger(__name__)
 

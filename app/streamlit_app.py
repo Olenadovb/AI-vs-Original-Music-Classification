@@ -14,9 +14,9 @@ import random
 import pandas as pd
 import streamlit as st
 
-from wine_origin.config import load_config
-from wine_origin.data import load_raw_csv, train_test_split_stratified
-from wine_origin.models import load_model
+from ai_music_origin.config import load_config
+from ai_music_origin.data import load_raw_csv, train_test_split_stratified
+from ai_music_origin.models import load_model
 
 CLASS_NAMES = ["class_0 (cultivar 1)", "class_1 (cultivar 2)", "class_2 (cultivar 3)"]
 
