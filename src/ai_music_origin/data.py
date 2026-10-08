@@ -9,8 +9,8 @@ import soundfile as sf
 
 
 def load_audio(path: str | Path) -> tuple[np.ndarray, int]:
-    """Load an audio file from disk.
-
+    """
+    Load an audio file from disk.
     Parameters
     path : str or Path
         Path to the audio file.
@@ -25,13 +25,12 @@ def load_audio(path: str | Path) -> tuple[np.ndarray, int]:
         raise FileNotFoundError(f"Audio file not found: {path}")
 
     audio, sample_rate = sf.read(path, dtype="float32")
-
     return audio, sample_rate
 
 
 def trim_or_pad(audio: np.ndarray, sample_rate: int, target_duration: float,) -> np.ndarray:
-    """Trim or pad an audio signal to a fixed duration.
-
+    """
+    Trim or pad an audio signal to a fixed duration.
     Parameters
     audio : np.ndarray
         Input audio signal.
@@ -57,8 +56,8 @@ def trim_or_pad(audio: np.ndarray, sample_rate: int, target_duration: float,) ->
 
 
 def normalize_audio(audio: np.ndarray) -> np.ndarray:
-    """Scale audio so its maximum absolute amplitude is 1.
-
+    """
+    Scale audio so its maximum absolute amplitude is 1.
     Parameters
     audio : np.ndarray
         Input audio signal.
@@ -75,14 +74,9 @@ def normalize_audio(audio: np.ndarray) -> np.ndarray:
     return audio / max_amplitude
 
 
-def preprocess_audio(
-    audio: np.ndarray,
-    sample_rate: int,
-    target_duration: float | None = None,
-    normalize: bool = False,
-) -> np.ndarray:
-    """Apply optional preprocessing steps to an audio signal.
-
+def preprocess_audio(audio: np.ndarray, sample_rate: int, target_duration: float | None = None, normalize: bool = False,) -> np.ndarray:
+    """
+    Apply optional preprocessing steps to an audio signal.
     Parameters
     audio : np.ndarray
         Input audio signal.
