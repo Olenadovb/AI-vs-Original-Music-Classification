@@ -14,6 +14,9 @@ ARCHIVE_PATH = RAW_DIR / "FakeMusicCaps.zip"
 DATASET_URL = ("https://zenodo.org/records/15063698/files/FakeMusicCaps.zip?download=1")
 EXPECTED_MD5 = "db418dc95ab7dc378a55f29d6021fd66"
 
+METADATA_PATH = RAW_DIR / "musiccaps-public.csv"
+METADATA_URL = ("https://huggingface.co/datasets/google/MusicCaps/resolve/main/musiccaps-public.csv")
+
 def calculate_md5(path: Path) -> str:
     """Calculate the MD5 checksum without loading the whole file."""
     md5 = hashlib.md5()
@@ -56,8 +59,34 @@ def download_dataset() -> None:
     print("Download completed successfully.")
 
 
-if __name__ == "__main__":
+def download_metadata() -> None:
+    """Download MusicCaps metadata if it is not already available."""
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+    if METADATA_PATH.exists():
+        print("MusicCaps metadata already exists, skipping download.")
+        return
+    print(f"Downloading MusicCaps metadata to: {METADATA_PATH}")
+    temporary_path = METADATA_PATH.with_suffix(".csv.part")
+
+    try:
+        with urlopen(METADATA_URL, timeout=120) as response:
+            with temporary_path.open("wb") as output:
+                while chunk := response.read(1024 * 1024):
+                    output.write(chunk)
+        temporary_path.replace(METADATA_PATH)
+    except Exception:
+        temporary_path.unlink(missing_ok=True)
+        raise
+    print("MusicCaps metadata downloaded successfully.")
+
+
+def main() -> None:
     download_dataset()
+    download_metadata()
+
+
+if __name__ == "__main__":
+    main()
 
 # def sha256_of(path: Path) -> str:
 #     return hashlib.sha256(path.read_bytes()).hexdigest()
