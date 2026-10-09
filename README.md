@@ -3,6 +3,30 @@
 <!-- ![lint](https://github.com/ucu-ai-course/project-template/actions/workflows/lint.yml/badge.svg) -->
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 
+--------------
+
+### Dataset Preparation
+
+After downloading and extracting FakeMusicCaps, run `notebooks/01_data_exploration.ipynb` to generate `data/interim/audio_analysis.csv`.
+
+Then prepare the dataset splits and pilot subset:
+
+```bash
+python scripts/prepare_dataset.py
+```
+
+The script generates:
+
+- `data/interim/split_metadata.csv` — the full dataset with train, validation, and test labels.
+- `data/interim/pilot_metadata.csv` — a balanced subset of 3,000 audio files (600 per generator).
+
+The split is performed at the track ID level to prevent related samples from appearing in different partitions. A fixed random seed ensures reproducibility.
+
+Raw audio files and generated metadata CSVs are excluded from version control.
+
+--------------------
+
+
 ## Team
 
 | Name | GitHub | Role |

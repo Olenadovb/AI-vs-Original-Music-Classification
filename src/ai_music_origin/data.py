@@ -1,81 +1,102 @@
-"""Loading, splitting, and persisting the wine dataset."""
+"""Loading and preprocessing audio data for the AI music origin project."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-import pandas as pd
-from sklearn.datasets import load_wine
-from sklearn.model_selection import train_test_split
-
-TARGET_COLUMN = "target"
+import numpy as np
+import soundfile as sf
 
 
-def materialize_raw_csv(output_path: str | Path) -> pd.DataFrame:
-    """Load ``sklearn``'s built-in wine dataset and write it to ``output_path`` as CSV.
-
-    This is the one place the dataset is fetched from ``sklearn`` — everything else in
-    the project reads the CSV, so the pipeline works the same way it would for a
-    dataset that came from a file instead of a Python package.
-
+def load_audio(path: str | Path) -> tuple[np.ndarray, int]:
+    """
+    Load an audio file from disk.
     Parameters
-    ----------
-    output_path : str or Path
-        Where to write the CSV, e.g. ``data/raw/wine.csv``.
+    path : str or Path
+        Path to the audio file.
 
     Returns
-    -------
-    pandas.DataFrame
-        The 13 feature columns plus a ``target`` column (0/1/2, one per cultivar).
-    """
-    bunch = load_wine(as_frame=True)
-    df = bunch.frame.rename(columns={"target": TARGET_COLUMN})
-
-    output_path = Path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(output_path, index=False)
-    return df
-
-
-def load_raw_csv(path: str | Path) -> pd.DataFrame:
-    """Read the materialized dataset back from disk.
-
-    Raises
-    ------
-    FileNotFoundError
-        With a hint to run `python scripts/download_data.py` — this is the error
-        message a student sees immediately after cloning the repo, so it should say
-        what to do next.
+    tuple[np.ndarray, int]
+        Audio signal and sample rate.
     """
     path = Path(path)
+
     if not path.exists():
-        raise FileNotFoundError(
-            f"{path} does not exist yet. Run `python scripts/download_data.py` first."
-        )
-    return pd.read_csv(path)
+        raise FileNotFoundError(f"Audio file not found: {path}")
+
+    audio, sample_rate = sf.read(path, dtype="float32")
+    return audio, sample_rate
 
 
-def split_features_target(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
-    """Split a dataframe into feature columns ``X`` and the ``target`` series ``y``."""
-    X = df.drop(columns=[TARGET_COLUMN])
-    y = df[TARGET_COLUMN]
-    return X, y
-
-
-def train_test_split_stratified(
-    df: pd.DataFrame, test_size: float, seed: int
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Stratified train/test split so all three classes stay proportionally represented.
-
-    Why this matters: with an unstratified split, a small or imbalanced dataset (this
-    one has 178 samples across 3 classes) can easily leave the test set with too few
-    examples of the smallest class to measure anything meaningful about it — or, in
-    the worst case, none at all.
+def trim_or_pad(audio: np.ndarray, sample_rate: int, target_duration: float,) -> np.ndarray:
     """
-    train_df, test_df = train_test_split(
-        df,
-        test_size=test_size,
-        random_state=seed,
-        stratify=df[TARGET_COLUMN],
-    )
-    return train_df.reset_index(drop=True), test_df.reset_index(drop=True)
+    Trim or pad an audio signal to a fixed duration.
+    Parameters
+    audio : np.ndarray
+        Input audio signal.
+    sample_rate : int
+        Sample rate in Hz.
+    target_duration : float
+        Target duration in seconds.
+
+    Returns
+    np.ndarray
+        Audio signal with the requested duration.
+    """
+    target_length = int(sample_rate * target_duration)
+
+    if len(audio) > target_length:
+        return audio[:target_length]
+
+    if len(audio) < target_length:
+        padding = target_length - len(audio)
+        return np.pad(audio, (0, padding))
+
+    return audio
+
+
+def normalize_audio(audio: np.ndarray) -> np.ndarray:
+    """
+    Scale audio so its maximum absolute amplitude is 1.
+    Parameters
+    audio : np.ndarray
+        Input audio signal.
+
+    Returns
+    np.ndarray
+        Normalized audio signal.
+    """
+    max_amplitude = np.max(np.abs(audio))
+
+    if max_amplitude == 0:
+        return audio
+
+    return audio / max_amplitude
+
+
+def preprocess_audio(audio: np.ndarray, sample_rate: int, target_duration: float | None = None, normalize: bool = False,) -> np.ndarray:
+    """
+    Apply optional preprocessing steps to an audio signal.
+    Parameters
+    audio : np.ndarray
+        Input audio signal.
+    sample_rate : int
+        Sample rate in Hz.
+    target_duration : float or None
+        If provided, trim or pad audio to this duration.
+    normalize : bool
+        Whether to normalize audio amplitude.
+
+    Returns
+    np.ndarray
+        Processed audio signal.
+    """
+    processed_audio = audio.copy()
+
+    if target_duration is not None:
+        processed_audio = trim_or_pad(processed_audio, sample_rate, target_duration)
+
+    if normalize:
+        processed_audio = normalize_audio(processed_audio)
+
+    return processed_audio
