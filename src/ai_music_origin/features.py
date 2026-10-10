@@ -1,23 +1,37 @@
-"""Feature preparation.
-
-The wine dataset's 13 chemical measurements are already numeric, complete, and
-comparably scaled to what a real analysis would use directly — see
-notebooks/01-data-exploration.ipynb. There is no hand-engineered feature to add
-without inventing one for its own sake. Scaling happens inside the model pipeline
-(see models.py's ``StandardScaler``), not here, since it's a model concern rather
-than a dataset concern.
-
-This module exists as a placeholder in the pattern every project in this template
-follows: once your project needs real feature engineering (derived columns, text
-vectorization, encoding), it goes here rather than inline in data.py or models.py,
-so data.py stays "get me clean rows" and models.py stays "get me a fitted estimator".
-"""
-
+"""Handcrafted acoustic feature extraction."""
 from __future__ import annotations
+import librosa
+import numpy as np
 
 import pandas as pd
 
+def extract_handcrafted_features(audio: np.ndarray, sample_rate: int,) -> dict[str, float]:
+    features = {}
 
-def identity_features(X: pd.DataFrame) -> pd.DataFrame:
-    """Return features unchanged. Replace with real transformations if you add any."""
-    return X
+    rms = librosa.feature.rms(y=audio)[0]
+    features["rms_mean"] = float(np.mean(rms))
+    features["rms_std"] = float(np.std(rms))
+
+    zero = librosa.feature.zero_crossing_rate(audio)[0]
+    features["zero_mean"] = float(np.mean(zero))
+    features["zero_std"] = float(np.std(zero))
+
+    centroid = librosa.feature.spectral_centroid(y=audio, sr=sample_rate)[0]
+    features["spectral_centroid_mean"] = float(np.mean(centroid))
+    features["spectral_centroid_std"] = float(np.std(centroid))
+
+    bandwidth = librosa.feature.spectral_bandwidth(y=audio, sr=sample_rate)[0]
+    features["spectral_bandwidth_mean"] = float(np.mean(bandwidth))
+    features["spectral_bandwidth_std"] = float(np.std(bandwidth))
+
+    rolloff = librosa.feature.spectral_rolloff(y=audio, sr=sample_rate)[0]
+    features["spectral_rolloff_mean"] = float(np.mean(rolloff))
+    features["spectral_rolloff_std"] = float(np.std(rolloff))
+
+    mfcc = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=13)
+
+    for i in range(mfcc.shape[0]):
+        features[f"mfcc_{i + 1}_mean"] = float(np.mean(mfcc[i]))
+        features[f"mfcc_{i + 1}_std"] = float(np.std(mfcc[i]))
+
+    return features
