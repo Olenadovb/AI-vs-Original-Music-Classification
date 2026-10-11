@@ -26,6 +26,31 @@ Raw audio files and generated metadata CSVs are excluded from version control.
 
 --------------------
 
+### Pretrained Audio Embeddings (CLAP)
+
+The notebook `notebooks/02-handcrafted-features.ipynb` also extracts pretrained audio embeddings using the `laion/clap-htsat-unfused` model without fine-tuning.The generated embeddings are not stored in Git and can be reproduced locally.
+
+**How to generate the embeddings:**
+
+1. Open `notebooks/02-handcrafted-features.ipynb` and make sure the working directory is `notebooks/`.
+2. Run cells **2–3** to load `pilot_metadata.csv`.
+3. Then run all needed sells in section **Pretrained Audio Embeddings**
+
+The extraction process converts each audio clip to a 10-second signal, resamples it to 48 kHz, and processes it using CLAP.
+
+**Output:**
+
+`data/interim/clap_embeddings.npz`
+
+The file contains:
+
+- `embeddings` — 512-dimensional audio representations for 3000 samples.
+- `track_ids` — original track identifiers.
+- `generators` — generator labels.
+- `splits` — predefined train/validation/test assignments.
+
+PCA and UMAP visualizations are included in the same notebook but are not required to generate the `.npz` file.
+
 
 ## Team
 
