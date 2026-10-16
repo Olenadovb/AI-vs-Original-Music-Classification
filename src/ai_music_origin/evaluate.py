@@ -9,24 +9,58 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, clone
-from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
+from sklearn.metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+)
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 
 
-def compute_metrics(y_true: pd.Series, y_pred: np.ndarray) -> dict[str, Any]:
-    """Compute the metrics this project reports everywhere: accuracy, macro-F1, and
-    the confusion matrix.
 
-    Why macro-F1 alongside accuracy: accuracy on a 3-class dataset can look fine while
-    the model is quietly bad at the smallest class. Macro-F1 averages the F1 score of
-    each class equally, so a model that ignores a minority class gets penalized for it
-    even if overall accuracy stays high.
-    """
+def compute_metrics(
+    y_true: pd.Series,
+    y_pred: np.ndarray,
+    labels: list | None = None,
+) -> dict[str, Any]:
+    """Compute classification metrics for model evaluation."""
+
     return {
-        "accuracy": float(accuracy_score(y_true, y_pred)),
-        "macro_f1": float(f1_score(y_true, y_pred, average="macro")),
-        "confusion_matrix": confusion_matrix(y_true, y_pred).tolist(),
+        "accuracy": float(
+            accuracy_score(y_true, y_pred)
+        ),
+        "balanced_accuracy": float(
+            balanced_accuracy_score(y_true, y_pred)
+        ),
+        "macro_f1": float(
+            f1_score(
+                y_true, y_pred,
+                average="macro",
+                zero_division=0
+            )
+        ),
+        "macro_precision": float(
+            precision_score(
+                y_true, y_pred,
+                average="macro",
+                zero_division=0
+            )
+        ),
+        "macro_recall": float(
+            recall_score(
+                y_true, y_pred,
+                average="macro",
+                zero_division=0
+            )
+        ),
+        "confusion_matrix": confusion_matrix(
+            y_true, y_pred, labels=labels
+        ).tolist(),
     }
+
 
 
 def cross_validate_accuracy(
