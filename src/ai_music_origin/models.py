@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
 
 import joblib
 from sklearn.base import BaseEstimator
@@ -49,6 +51,34 @@ def build_logistic_regression(config: dict[str, Any]) -> Pipeline:
     )
 
 
+def build_svm(config: dict[str, Any]) -> Pipeline:
+    """Build an SVM classifier with standardized features."""
+    params = config["model"]["svm"]
+
+    return Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", SVC(
+            kernel=params["kernel"],
+            C=params["C"],
+            gamma=params["gamma"],
+            random_state=config["seed"],
+        )),
+    ])
+
+
+def build_knn(config: dict[str, Any]) -> Pipeline:
+    """Build a k-nearest neighbors classifier with standardized features."""
+    params = config["model"]["knn"]
+
+    return Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", KNeighborsClassifier(
+            n_neighbors=params["n_neighbors"],
+            weights=params["weights"],
+        )),
+    ])
+
+
 def build_random_forest(config: dict[str, Any]) -> RandomForestClassifier:
     """A tree-based model for comparison against the linear baseline model."""
     params = config["model"]["random_forest"]
@@ -69,6 +99,8 @@ def build_active_model(config: dict[str, Any]) -> BaseEstimator:
     builders = {
         "logistic_regression": build_logistic_regression,
         "random_forest": build_random_forest,
+        "svm": build_svm,
+        "knn": build_knn,
     }
     if active not in builders:
         raise ValueError(f"Unknown model.active={active!r}, expected one of {list(builders)}")

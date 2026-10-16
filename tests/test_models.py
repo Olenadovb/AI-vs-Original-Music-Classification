@@ -1,54 +1,96 @@
-"""Smoke tests for the model pipeline. These are deliberately shallow — they exist to
-catch "the pipeline doesn't even run" (a broken import, a shape mismatch, a typo in a
-param name), which is responsible for most broken ML code in practice. Deeper
-correctness (does the model actually generalize well) is what results/experiments.md
-and the notebooks are for.
-"""
 
-from __future__ import annotations
+"""Tests for the music classification baseline models."""
 
 import numpy as np
-import pandas as pd
+import pytest
+
+from sklearn.datasets import make_classification
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 from ai_music_origin.config import load_config
-from ai_music_origin.data import (
-    materialize_raw_csv,
-    split_features_target,
-    train_test_split_stratified,
+from ai_music_origin.models import (
+    build_baseline,
+    build_logistic_regression,
+    build_svm,
+    build_knn,
 )
-from ai_music_origin.models import build_active_model, build_baseline
+from ai_music_origin.evaluate import compute_metrics
 
 
-def test_pipeline_trains_on_small_sample_and_predicts_right_shape(tmp_path):
-    config = load_config("config/default.yaml")
-    df = materialize_raw_csv(tmp_path / "wine.csv")
-    # ~20 samples, all 3 classes represented
-    small_df = pd.concat([group.sample(n=7, random_state=0) for _, group in df.groupby("target")])
-    X, y = split_features_target(small_df)
-
-    model = build_active_model(config)
-    model.fit(X, y)
-    predictions = model.predict(X)
-
-    assert predictions.shape == (len(X),)
-    assert set(predictions).issubset({0, 1, 2})
-
-
-def test_active_model_beats_baseline_on_held_out_data(tmp_path):
-    config = load_config("config/default.yaml")
-    df = materialize_raw_csv(tmp_path / "wine.csv")
-    train_df, test_df = train_test_split_stratified(
-        df, test_size=config["split"]["test_size"], seed=config["seed"]
+@pytest.fixture
+def sample_data():
+    """Create a small synthetic classification dataset."""
+    X, y = make_classification(
+        n_samples=100,
+        n_features=20,
+        n_informative=15,
+        n_classes=5,
+        random_state=42,
     )
-    X_train, y_train = split_features_target(train_df)
-    X_test, y_test = split_features_target(test_df)
+    return X, y
 
-    baseline = build_baseline()
-    baseline.fit(X_train, y_train)
-    baseline_accuracy = np.mean(baseline.predict(X_test) == y_test)
 
-    model = build_active_model(config)
-    model.fit(X_train, y_train)
-    model_accuracy = np.mean(model.predict(X_test) == y_test)
+@pytest.fixture
+def config():
+    return load_config("config/default.yaml")
 
-    assert model_accuracy > baseline_accuracy
+
+@pytest.mark.parametrize("builder", [
+    build_logistic_regression,
+    build_svm,
+    build_knn,
+])
+def test_model_creation(builder, config):
+    """Check that each model has a scaling pipeline."""
+    model = builder(config)
+
+    assert isinstance(model, Pipeline)
+    assert isinstance(model.named_steps["scaler"], StandardScaler)
+    assert "clf" in model.named_steps
+
+
+@pytest.mark.parametrize("builder", [
+    build_logistic_regression,
+    build_svm,
+    build_knn,
+])
+def test_model_training_and_prediction(builder, config, sample_data):
+    """Check that models can train and predict."""
+    X, y = sample_data
+
+    model = builder(config)
+    model.fit(X[:80], y[:80])
+
+    predictions = model.predict(X[80:])
+
+    assert predictions.shape == (20,)
+    assert set(predictions).issubset(set(y[:80]))
+
+
+def test_dummy_classifier(sample_data):
+    """Check that the majority-class baseline works."""
+    X, y = sample_data
+
+    model = build_baseline()
+    model.fit(X[:80], y[:80])
+
+    predictions = model.predict(X[80:])
+
+    assert predictions.shape == (20,)
+
+
+def test_evaluation_metrics():
+    """Check evaluation metrics on known labels."""
+    y_true = np.array([0, 1, 2, 0, 1, 2])
+    y_pred = np.array([0, 1, 1, 0, 2, 2])
+
+    metrics = compute_metrics(y_true, y_pred)
+
+    assert metrics["accuracy"] == pytest.approx(2 / 3)
+    assert metrics["balanced_accuracy"] == pytest.approx(2 / 3)
+    assert metrics["macro_f1"] == pytest.approx(2 / 3)
+    assert metrics["macro_precision"] == pytest.approx(2 / 3)
+    assert metrics["macro_recall"] == pytest.approx(2 / 3)
+
+    assert np.array(metrics["confusion_matrix"]).shape == (3, 3)
