@@ -1,0 +1,17 @@
+generator,predicted_generator,errors,percent_of_all_errors
+musicldm,audioldm2,11,15.1
+audioldm2,mustango,10,13.7
+audioldm2,musicldm,10,13.7
+mustango,audioldm2,8,11.0
+mustango,musicldm,6,8.2
+musicldm,mustango,4,5.5
+MusicGen_medium,musicldm,4,5.5
+MusicGen_medium,mustango,4,5.5
+mustango,MusicGen_medium,3,4.1
+audioldm2,MusicGen_medium,3,4.1
+musicldm,MusicGen_medium,3,4.1
+MusicGen_medium,stable_audio_open,2,2.7
+MusicGen_medium,audioldm2,2,2.7
+musicldm,stable_audio_open,1,1.4
+stable_audio_open,audioldm2,1,1.4
+stable_audio_open,mustango,1,1.4
