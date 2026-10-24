@@ -125,6 +125,57 @@ pip install -r requirements.txt
 ## Reproducibility
 
 
+### Baseline Classification
+
+
+The baseline pipeline compares **Logistic Regression, SVM, and k-NN** using CLAP embeddings and handcrafted acoustic features.
+
+
+**Setup:** Install dependencies from the repository root:
+
+
+```bash
+python -m pip install -r requirements.txt
+python -m pip install -e .
+```
+
+
+**Required files:**
+- `data/interim/clap_embeddings.npz`
+- `data/interim/handcrafted_features.csv`
+
+
+These files are generated locally and are not stored in Git.
+
+
+**Run:** Open `notebooks/02-baseline-model.ipynb`, restart the kernel, and run all cells.
+
+
+**Data splitting:** The pipeline uses predefined train (70%), validation (15%), and test (15%) splits. `StandardScaler` is fitted only on training data through scikit-learn pipelines. Validation selects the best model; test is reserved for final evaluation.
+
+
+**Results:** Logistic Regression with CLAP embeddings performed best.
+
+
+| Metric | Score |
+|---|---:|
+| Validation Macro F1 | 0.8713 |
+| Test Macro F1 | 0.8378 |
+| Test Accuracy | 0.8378 |
+
+
+The train-validation gap suggests possible overfitting.
+
+
+**Reproducibility:** Experiments use seed `42` from `config/default.yaml`. Run the automated tests:
+
+
+```bash
+python -m pytest tests/test_models.py tests/test_reproducibility.py -v
+```
+
+
+Model comparisons and confusion matrices are saved in `results/`.
 
 
 ## AI usage
