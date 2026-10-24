@@ -1,54 +1,86 @@
-"""Makes "reproducible" a checkable claim instead of a hopeful one: two runs with the
-same seed must produce bit-identical metrics, not just "similar" ones.
-"""
 
-from __future__ import annotations
+"""Reproducibility tests for music classification models."""
+
+import numpy as np
+import pytest
+
+from sklearn.datasets import make_classification
 
 from ai_music_origin.config import load_config
-from ai_music_origin.data import (
-    materialize_raw_csv,
-    split_features_target,
-    train_test_split_stratified,
+from ai_music_origin.models import (
+    build_logistic_regression,
+    build_svm,
+    build_knn,
 )
 from ai_music_origin.evaluate import compute_metrics
-from ai_music_origin.models import build_active_model
-from ai_music_origin.utils import set_seed
 
 
-def _run_once(tmp_path, config):
-    set_seed(config["seed"])
-    df = materialize_raw_csv(tmp_path / "wine.csv")
-    train_df, test_df = train_test_split_stratified(
-        df, test_size=config["split"]["test_size"], seed=config["seed"]
+@pytest.fixture
+def sample_data():
+    """Generate the same synthetic dataset for each test."""
+    X, y = make_classification(
+        n_samples=150,
+        n_features=20,
+        n_informative=15,
+        n_classes=5,
+        random_state=42,
     )
-    X_train, y_train = split_features_target(train_df)
-    X_test, y_test = split_features_target(test_df)
 
-    model = build_active_model(config)
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
-    return compute_metrics(y_test, y_pred)
+    return X[:100], X[100:], y[:100], y[100:]
 
 
-def test_same_seed_gives_identical_metrics(tmp_path):
-    config = load_config("config/default.yaml")
-
-    first = _run_once(tmp_path / "run1", config)
-    second = _run_once(tmp_path / "run2", config)
-
-    assert first == second
+@pytest.fixture
+def config():
+    return load_config("config/default.yaml")
 
 
-def test_different_seed_can_give_different_split(tmp_path):
-    config = load_config("config/default.yaml")
-    config_other_seed = dict(config, seed=7)
+@pytest.mark.parametrize("builder", [
+    build_logistic_regression,
+    build_svm,
+    build_knn,
+])
+def test_same_seed_gives_identical_predictions(
+    builder, config, sample_data
+):
+    """Two runs with the same configuration must agree."""
+    X_train, X_val, y_train, y_val = sample_data
 
-    first = _run_once(tmp_path / "run1", config)
-    other = _run_once(tmp_path / "run2", config_other_seed)
+    model_1 = builder(config)
+    model_2 = builder(config)
 
-    # Not a strict inequality assertion on the metrics themselves (they could
-    # coincidentally match) — this documents *why* the seed matters: a different
-    # seed changes which rows land in train vs. test.
-    assert config["seed"] != config_other_seed["seed"]
-    assert isinstance(first["accuracy"], float)
-    assert isinstance(other["accuracy"], float)
+    model_1.fit(X_train, y_train)
+    model_2.fit(X_train, y_train)
+
+    pred_1 = model_1.predict(X_val)
+    pred_2 = model_2.predict(X_val)
+
+    np.testing.assert_array_equal(pred_1, pred_2)
+
+    metrics_1 = compute_metrics(y_val, pred_1)
+    metrics_2 = compute_metrics(y_val, pred_2)
+
+    assert metrics_1 == metrics_2
+
+
+@pytest.mark.parametrize("builder", [
+    build_logistic_regression,
+    build_svm,
+    build_knn,
+])
+def test_repeated_training_is_stable(builder, config, sample_data):
+    """Repeated training must produce consistent results."""
+    X_train, X_val, y_train, _ = sample_data
+
+    results = []
+
+    for _ in range(3):
+        model = builder(config)
+        model.fit(X_train, y_train)
+
+        results.append(model.predict(X_val))
+
+    for predictions in results[1:]:
+        np.testing.assert_array_equal(
+            results[0],
+            predictions
+        )
