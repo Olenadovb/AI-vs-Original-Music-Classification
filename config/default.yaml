@@ -1,28 +1,24 @@
 # All the numbers and paths a run needs, in one place — nothing below should be
-# hardcoded in src/. Override any key from the CLI, e.g.:
-#   python -m wine_origin train --override model.random_forest.n_estimators=300
+# hardcoded in src/. Loaded with ai_music_origin.config.load_config().
 
 seed: 42
 
 paths:
-  raw_data: data/raw/wine.csv
-  checksums: data/raw/CHECKSUMS.txt
-  model: models/model.joblib
-  metrics: results/metrics.json
-  confusion_matrix: results/figures/confusion_matrix.png
-  experiments_log: results/experiments.md
+  raw_data: data/raw/fakemusiccaps
+  metadata: data/interim/split_metadata.csv
+  results: results
 
 split:
-  test_size: 0.2
-  stratify: true
+  validation_size: 0.15
+  test_size: 0.15
+  group_by: track_id
 
 cv:
   n_splits: 5
 
 model:
-  # Which model `train`/`predict` use by default. "logistic_regression" is the
-  # best-performing of the models we compared — see results/experiments.md.
-  active: logistic_regression
+  # Classifiers compared in notebook 03 (see results/README.md).
+  active: svm
   logistic_regression:
     max_iter: 1000
     C: 1.0

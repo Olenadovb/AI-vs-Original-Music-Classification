@@ -16,8 +16,3 @@ setup: ## Create .venv, install runtime+dev deps and this package, install pre-c
 	$(BIN)/pip install -r requirements.txt -r requirements-dev.txt
 	$(BIN)/pip install -e .
 	$(BIN)/pre-commit install
-
-reproduce: ## data -> train -> evaluate; prints the same metric as README.md's results table
-	$(BIN)/python scripts/download_data.py
-	$(BIN)/python -m wine_origin train
-	$(BIN)/python -m wine_origin evaluate
