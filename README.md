@@ -73,10 +73,9 @@ All current results are obtained on the same five generators the models were tra
 
 | Member | Responsibilities | Contribution |
 |---|---|---:|
-| Alina Bodnar ([@alinabodnarpn](https://github.com/alinabodnarpn)) | Handcrafted acoustic feature extraction, exploratory data analysis (EDA), feature group comparison, and feature importance analysis | TBD % |
-| Sofia Vitchynkina ([@vitchynkinas](https://github.com/vitchynkinas)) | Baseline classification and evaluation using Logistic Regression, SVM, and k-NN across four audio representations and performance evaluation| TBD % |
-| Olena Dovbenchuk ([@Olenadovb](https://github.com/Olenadovb)) | Dataset preparation, group-aware data splitting, CLAP, MERT and MuQ embeddings, PCA/UMAP visualization, and cross-model error analysis.
- | TBD % |
+| Alina Bodnar ([@alinabodnarpn](https://github.com/alinabodnarpn)) | Handcrafted acoustic feature extraction, exploratory data analysis (EDA), feature group comparison, and feature importance analysis | 33.33 % |
+| Sofia Vitchynkina ([@vitchynkinas](https://github.com/vitchynkinas)) | Baseline classification and evaluation using Logistic Regression, SVM, and k-NN across four audio representations and performance evaluation| 33.33 % |
+| Olena Dovbenchuk ([@Olenadovb](https://github.com/Olenadovb)) | Dataset preparation, group-aware data splitting, CLAP, MERT and MuQ embeddings, PCA/UMAP visualization, and cross-model error analysis| 33.33 % |
 
 Mentor: Olesia Omelchuk
 
