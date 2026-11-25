@@ -1,0 +1,21 @@
+{
+  "run_extended": true,
+  "representations": [
+    "MuQ",
+    "Handcrafted",
+    "MERT",
+    "CLAP"
+  ],
+  "classifiers": [
+    "Logistic Regression",
+    "SVM",
+    "k-NN"
+  ],
+  "target_known_acceptance_validation": 0.95,
+  "random_state": 42,
+  "threshold_selection": "95th percentile of known-validation novelty; strictly greater rejects",
+  "unknown_definition": "one full FakeMusicCaps generator held out per fold",
+  "split_policy": "reuse original track_id-grouped train / validation / test",
+  "model_factories": "src/ai_music_origin/models.py, config/default.yaml",
+  "selection_limit": "exploratory model comparison on 5 LOGO test folds; external confirmatory test needed"
+}

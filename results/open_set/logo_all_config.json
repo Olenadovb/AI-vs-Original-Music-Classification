@@ -1,0 +1,19 @@
+{
+  "experiment_id": "logo_all",
+  "task": "Leave-one-generator-out forced-choice diagnostic (NOT unknown detection)",
+  "representation": "MuQ 1024-dimensional frozen embedding",
+  "classifier": "StandardScaler -> LogisticRegression",
+  "logreg_C": 1.0,
+  "logreg_max_iter": 1000,
+  "random_state": 42,
+  "held_out_generators": [
+    "MusicGen_medium",
+    "audioldm2",
+    "musicldm",
+    "mustango",
+    "stable_audio_open"
+  ],
+  "source_metadata": "data\\interim\\split_metadata.csv",
+  "source_embeddings": "data\\interim\\muq_embeddings_full.npz",
+  "split_policy": "reuse original group-aware split; no train/validation samples of held-out generator"
+}
